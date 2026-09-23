@@ -242,10 +242,26 @@ def test_ti_does_not_modify_score(vt_provider, mock_response, tmp_path):
     with patch.object(sys, "argv", test_args_2):
         with patch("phishscope.cli.json.dumps") as mock_json_dumps:
             with patch.dict("os.environ", {"PHISHSCOPE_VT_API_KEY": "fake_key"}):
-                with patch.object(
-                    urllib.request, "urlopen", return_value=mock_response
-                ):
+                def make_mock_response(*args, **kwargs):
+                    return MockHTTPResponse(
+                        json.dumps({
+                            "data": {
+                                "attributes": {
+                                    "last_analysis_stats": {
+                                        "malicious": 5,
+                                        "suspicious": 1,
+                                        "harmless": 50,
+                                        "undetected": 10,
+                                        "timeout": 2
+                                    }
+                                }
+                            }
+                        }).encode()
+                    )
 
+                with patch.object(
+                    urllib.request, "urlopen", side_effect=make_mock_response
+                ):
                     main()
                     call_args = mock_json_dumps.call_args[0][0]
                     score_ti = call_args["risk_score"]
