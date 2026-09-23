@@ -5,7 +5,7 @@ This document captures the current architecture and major design boundaries for 
 ## Component A: PhishScope Analysis Pipeline
 PhishScope operates via a strict sequential pipeline to ensure offline-first safety and separation of concerns.
 
-`EmailParser` → `HeaderAnalyzer` → `ExtractorAnalyzer` → `AuthAnalyzer` → `ScoringEngine` → Optional `TIOrchestrator` → `CLI Reporter`
+`EmailParser` → `HeaderAnalyzer` → `ExtractorAnalyzer` → `AuthAnalyzer` → `ScoringEngine` → `CLI Reporter`
 
 ### 1. Parsing (`EmailParser`)
 - Leverages the standard library's `email.policy.default` to extract structured representations safely.
@@ -32,20 +32,3 @@ PhishScope operates via a strict sequential pipeline to ensure offline-first saf
 - Utilizes category saturation limits (diminishing returns) and strict cross-category rules for `CRITICAL` escalation.
 - **Findings are heuristic evidence, not proof of maliciousness**, and scoring does not represent a strict probability.
 
-### 6. Threat Intelligence (`TIOrchestrator` - Optional)
-- Opt-in enrichment layer executing strictly offline normalization (e.g. defanging `hxxp://`, lowercasing domains) and deduplication.
-- Queries external APIs (e.g. VirusTotal) only if explicitly enabled with a configured API key. **Note:** When `--enable-ti` is used, extracted IOC values are disclosed to the external provider.
-- Threat Intel operates purely as enrichment and **does not alter the Phase 6 heuristic score**.
-- Results are persistently cached locally. Cache keys utilize SHA-256 hashing to avoid casually persisting raw IOC strings as cache JSON keys.
-- **No Raw File Uploads**: PhishScope does not upload attachment contents or raw files to VirusTotal. When TI is explicitly enabled, the provider may perform lookups for extracted URLs, IPv4 addresses, domains, and SHA-256 file hashes.
-
-## Component B: Detection-as-Code (Future Work)
-- The Sigma detection engine (`detect` command) remains a future placeholder.
-- It will eventually provide a lightweight Sigma rule matcher to evaluate rules against standard log formats or PhishScope structured output.
-
-## Major Design Boundaries
-- **Standard-Library-First**: The core analyzers avoid unnecessary external dependencies.
-- **No Network By Default**: The tool is 100% offline out-of-the-box. Threat Intel is strictly opt-in.
-- **Static Evidence**: Analyzers report observable characteristics (findings/evidence) rather than claiming absolute proof of forgery or maliciousness.
-- **Separation of Evidence vs. Verdict**: `Finding` objects contain severities and confidences, but these are independent of the final bounded email risk classification.
-- **Minimum Python Version**: Python 3.10+ is required.

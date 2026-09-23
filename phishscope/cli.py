@@ -11,7 +11,6 @@ from .extractors import ExtractorAnalyzer
 from .headers import HeaderAnalyzer
 from .parser import EmailParser
 from .scoring import ScoringEngine
-from .ti import TIOrchestrator, TIStatus
 
 
 def get_risk_color(risk_level):
@@ -33,9 +32,6 @@ def create_parser():
     analyze_parser = subparsers.add_parser("analyze", help="Analyze an .eml file")
     analyze_parser.add_argument("file", type=str, help="Path to the .eml file")
     analyze_parser.add_argument("--json", action="store_true", help="Output final results as JSON")
-    analyze_parser.add_argument(
-        "--enable-ti", action="store_true", help="Enable Threat Intelligence enrichment"
-    )
 
     # Detect command (future)
     detect_parser = subparsers.add_parser("detect", help="Run Sigma detection rules")
@@ -126,13 +122,6 @@ def main():
         scoring_engine = ScoringEngine()
         result = scoring_engine.evaluate(findings)
 
-        # Threat Intelligence
-        if not args.json:
-            console.print("Running Threat Intelligence...")
-
-        ti_orchestrator = TIOrchestrator(enable_ti=args.enable_ti)
-        ti_results = ti_orchestrator.run(findings, email)
-
         if args.json:
             out_dict = {
                 "risk_score": result.score,
@@ -156,23 +145,6 @@ def main():
                     }
                     for cat, cs in result.category_scores.items()
                 },
-                "threat_intelligence": [
-                    {
-                        "ioc_type": r.ioc_type.value,
-                        "ioc_value": r.ioc_value,
-                        "provider": r.provider_name,
-                        "status": r.status.value,
-                        "cache_hit": r.cache_hit,
-                        "malicious": r.malicious,
-                        "suspicious": r.suspicious,
-                        "harmless": r.harmless,
-                        "timeout": r.timeout,
-                        "undetected": r.undetected,
-                        "total_engines": r.total_engines,
-                        "timestamp": r.timestamp,
-                    }
-                    for r in ti_results
-                ]
             }
             # Output raw JSON to stdout so it can be piped easily
             print(json.dumps(out_dict, indent=2))
@@ -203,40 +175,6 @@ def main():
             console.print(
                 Panel(panel_content, title="[bold]PHISHSCOPE ANALYSIS[/bold]", border_style="blue")
             )
-
-            # TI Summary Panel
-            if ti_results:
-                ti_content = ""
-                # Group by provider
-                providers = {}
-                for r in ti_results:
-                    providers.setdefault(r.provider_name, []).append(r)
-
-                for provider, res_list in providers.items():
-                    ti_content += f"[bold]{provider}[/bold]\n"
-                    ti_content += "────────────────────────────\n"
-                    for r in res_list:
-                        ti_content += f"{r.ioc_type.name}: {r.ioc_value}\n"
-                        status_str = r.status.value
-                        if r.cache_hit:
-                            status_str += " (cached)"
-                        ti_content += f"Status: {status_str}\n"
-                        if r.status == TIStatus.LOOKUP_SUCCESS:
-                            ti_content += f"Malicious: {r.malicious or 0}\n"
-                            ti_content += f"Suspicious: {r.suspicious or 0}\n"
-                            ti_content += f"Undetected: {r.undetected or 0}\n"
-                            if r.timeout:
-                                ti_content += f"Timeout: {r.timeout}\n"
-                            ti_content += f"Total Engines: {r.total_engines or 0}\n"
-                        ti_content += "\n"
-
-                console.print(
-                    Panel(
-                        ti_content.strip(),
-                        title="[bold]THREAT INTELLIGENCE SUMMARY[/bold]",
-                        border_style="red"
-                    )
-                )
 
     elif args.command == "detect":
         print("Sigma detection not yet implemented.")

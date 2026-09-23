@@ -7,14 +7,13 @@ A static email triage CLI and Detection-as-Code toolkit, built as a portfolio pr
 ## Current Project Status
 
 The project is actively under development.
-**Phases 1 through 7 are complete:**
+**Phases 1 through 6 are complete:**
 - **Phase 1:** Project foundation, CLI setup, robust Pytest and Ruff CI pipelines.
 - **Phase 2:** `.eml` safe parsing, MIME traversal, header decoding, attachment metadata extraction.
 - **Phase 3:** Header security analysis (e.g., lookalike domains, spoofing, urgency heuristics).
 - **Phase 4:** URL and attachment analysis (e.g., extraction, undefanging, IP-based URL detection).
 - **Phase 5:** Static authentication analysis (offline SPF/DKIM/DMARC header parsing).
 - **Phase 6:** Deterministic heuristic scoring mechanism.
-- **Phase 7:** Optional offline-first VirusTotal threat-intelligence enrichment.
 
 **Future Planned Phases:**
 - **Sigma Detection Engine:** The `detect` CLI command is currently a future placeholder. Future phases will introduce a lightweight Sigma rule matcher to evaluate rules against standard log formats, converting structured logs into Detection-as-Code alerts.
@@ -48,20 +47,8 @@ Generates structured JSON output, suitable for pipeline integration.
 python -m phishscope.cli analyze samples/phase5_demo.eml --json
 ```
 
-### Threat Intelligence Enrichment
-VirusTotal enrichment is strictly **optional**. It requires a valid API key provided via environment variable.
-
-```bash
-export PHISHSCOPE_VT_API_KEY="your_api_key_here"
-python -m phishscope.cli analyze samples/phase5_demo.eml --enable-ti
-```
-(If the key is omitted but `--enable-ti` is passed, the tool gracefully reports a `NOT_CONFIGURED` status and remains offline).
-
 ## Security and Privacy Notes
 - **Static & Offline-First:** By default, PhishScope operates entirely offline. It does not execute attachments, render HTML via browsers, or perform live DNS resolution.
-- **Threat Intelligence Disclosures:** Using `--enable-ti` performs external lookups against VirusTotal. This will disclose extracted Indicators of Compromise (IOCs) such as Domains, URLs, IPs, and SHA-256 hashes to the external provider.
-- **No File Uploads:** Threat Intelligence enrichment queries file *hashes* (SHA-256) only. Attachments and raw files are **never** uploaded to VirusTotal.
-- **Cache Privacy:** TI results are cached in `~/.phishscope/ti_cache.json`. To reduce casual plaintext exposure of sensitive IOCs on disk, cache keys are stored as SHA-256 hashes of the provider and IOC. Hashing the cache key avoids storing the raw IOC as the key, but does not make sensitive IOC information anonymous or cryptographically protected.
 
 ## Architecture Pipeline Overview
 The core analysis executes through a strictly separated sequential pipeline:
@@ -70,8 +57,7 @@ The core analysis executes through a strictly separated sequential pipeline:
 3. **ExtractorAnalyzer**: Parses body content and attachment metadata for URLs/hashes.
 4. **AuthAnalyzer**: Extracts and validates static `Authentication-Results` metadata.
 5. **ScoringEngine**: Aggregates `Finding` objects into a deterministic, capped 0-100 score.
-6. **TIOrchestrator** (Optional): Normalizes, deduplicates, and enriches extracted IOCs.
-7. **CLI Reporter**: Renders standard output or JSON.
+6. **CLI Reporter**: Renders standard output or JSON.
 
 For a detailed breakdown of boundaries and design decisions, see [Architecture Documentation](docs/architecture.md).
 
