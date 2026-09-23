@@ -19,8 +19,7 @@ def vt_provider():
 
 @pytest.fixture
 def mock_response():
-    mock_res = MagicMock()
-    mock_res.read.return_value = json.dumps({
+    return MockHTTPResponse(json.dumps({
         "data": {
             "attributes": {
                 "last_analysis_stats": {
@@ -32,13 +31,11 @@ def mock_response():
                 }
             }
         }
-    }).encode("utf-8")
-    return mock_res
+    }).encode("utf-8"))
 
 @pytest.fixture
 def mock_clean_response():
-    mock_res = MagicMock()
-    mock_res.read.return_value = json.dumps({
+    return MockHTTPResponse(json.dumps({
         "data": {
             "attributes": {
                 "last_analysis_stats": {
@@ -49,8 +46,7 @@ def mock_clean_response():
                 }
             }
         }
-    }).encode("utf-8")
-    return mock_res
+    }).encode("utf-8"))
 
 def _f(evidence):
     return Finding(
@@ -60,8 +56,8 @@ def _f(evidence):
     )
 
 def test_vt_valid_malicious(vt_provider, mock_response):
-    with patch.object(urllib.request, "urlopen", return_value=mock_response) as mock_urlopen:
-        mock_urlopen.return_value.__enter__.return_value = mock_response
+    with patch.object(urllib.request, "urlopen", return_value=mock_response):
+
         res = vt_provider.lookup(IOCType.URL, "http://evil.com")
         assert res.status == TIStatus.LOOKUP_SUCCESS
         assert res.malicious == 5
@@ -71,23 +67,21 @@ def test_vt_valid_malicious(vt_provider, mock_response):
         assert res.cache_hit is False
 
 def test_vt_stats_validation(vt_provider):
-    mock_res = MagicMock()
-    mock_res.read.return_value = json.dumps({
+    mock_res = MockHTTPResponse(json.dumps({
         "data": {
             "attributes": {
                 "last_analysis_stats": {
-                    "malicious": -5,         # negative -> 0
-                    "suspicious": "high",    # string -> 0
-                    "harmless": 50,          # valid
-                    # missing undetected -> 0
-                    "timeout": 1,            # valid
-                    "unexpected": 999        # unexpected -> ignored
+                    "malicious": -5,
+                    "suspicious": "high",
+                    "harmless": 50,
+                    "timeout": 1,
+                    "unexpected": 999
                 }
             }
         }
-    }).encode("utf-8")
-    with patch.object(urllib.request, "urlopen", return_value=mock_res) as mock_urlopen:
-        mock_urlopen.return_value.__enter__.return_value = mock_res
+    }).encode("utf-8"))
+    with patch.object(urllib.request, "urlopen", return_value=mock_res):
+
         res = vt_provider.lookup(IOCType.URL, "http://evil.com")
         assert res.malicious == 0
         assert res.suspicious == 0
@@ -97,8 +91,8 @@ def test_vt_stats_validation(vt_provider):
         assert res.total_engines == 51
 
 def test_vt_valid_clean(vt_provider, mock_clean_response):
-    with patch.object(urllib.request, "urlopen", return_value=mock_clean_response) as mock_urlopen:
-        mock_urlopen.return_value.__enter__.return_value = mock_clean_response
+    with patch.object(urllib.request, "urlopen", return_value=mock_clean_response):
+
         res = vt_provider.lookup(IOCType.URL, "http://google.com")
         assert res.status == TIStatus.LOOKUP_SUCCESS
         assert res.malicious == 0
@@ -127,18 +121,16 @@ def test_vt_timeout(vt_provider):
         assert res.status == TIStatus.TIMEOUT
 
 def test_vt_invalid_json(vt_provider):
-    mock_res = MagicMock()
-    mock_res.read.return_value = b"{invalid_json"
-    with patch.object(urllib.request, "urlopen", return_value=mock_res) as mock_urlopen:
-        mock_urlopen.return_value.__enter__.return_value = mock_res
+    mock_res = MockHTTPResponse(b"{invalid_json")
+    with patch.object(urllib.request, "urlopen", return_value=mock_res):
+
         res = vt_provider.lookup(IOCType.URL, "http://unknown.com")
         assert res.status == TIStatus.INVALID_RESPONSE
 
 def test_vt_malformed_response(vt_provider):
-    mock_res = MagicMock()
-    mock_res.read.return_value = b'{"data": {}}'
-    with patch.object(urllib.request, "urlopen", return_value=mock_res) as mock_urlopen:
-        mock_urlopen.return_value.__enter__.return_value = mock_res
+    mock_res = MockHTTPResponse(b'{"data": {}}')
+    with patch.object(urllib.request, "urlopen", return_value=mock_res):
+
         res = vt_provider.lookup(IOCType.URL, "http://unknown.com")
         assert res.status == TIStatus.INVALID_RESPONSE
 
@@ -252,8 +244,8 @@ def test_ti_does_not_modify_score(vt_provider, mock_response, tmp_path):
             with patch.dict("os.environ", {"PHISHSCOPE_VT_API_KEY": "fake_key"}):
                 with patch.object(
                     urllib.request, "urlopen", return_value=mock_response
-                ) as mock_urlopen:
-                    mock_urlopen.return_value.__enter__.return_value = mock_response
+                ):
+
                     main()
                     call_args = mock_json_dumps.call_args[0][0]
                     score_ti = call_args["risk_score"]
@@ -307,3 +299,14 @@ def test_domain_normalization_cases():
     urls6 = [ioc for ioc in iocs6 if ioc[0] == IOCType.URL]
     assert len(urls6) == 0
 
+
+
+class MockHTTPResponse:
+    def __init__(self, data):
+        self.data = data
+    def read(self):
+        return self.data
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
