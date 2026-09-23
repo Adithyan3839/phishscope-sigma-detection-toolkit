@@ -1,0 +1,12 @@
+From: "Alice" <alice@example.com>
+To: "Bob" <bob@example.org>
+Subject: Project Update
+Date: Wed, 24 Sep 2026 10:00:00 +0000
+Message-ID: <12345@example.com>
+Reply-To: alice.reply@example.com
+Return-Path: <alice.bounce@example.com>
+Received: from mx.example.org by inbound.example.org with ESMTP id 123; Wed, 24 Sep 2026 10:00:10 +0000
+Received: from sender.example.com by mx.example.org with ESMTP id 456; Wed, 24 Sep 2026 10:00:05 +0000
+X-Custom-Header: value1
+
+This is a simple plain text email.

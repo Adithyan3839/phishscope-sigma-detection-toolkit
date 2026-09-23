@@ -1,0 +1,9 @@
+From: =?UTF-8?B?QWxpY2UgwqFNYWdpYw==?= <alice@example.com>
+To: "Bob" <bob@example.org>
+Subject: =?UTF-8?Q?This_is_an_encoded_subject_=F0=9F=9A=80?=
+Date: Wed, 24 Sep 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+SGVsbG8gQm9iLAoKVGhpcyBib2R5IGlzIGJhc2U2NCBlbmNvZGVkLgoKQWxpY2U=

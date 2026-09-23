@@ -1,0 +1,20 @@
+From: "Alice" <alice@example.com>
+To: "Bob" <bob@example.org>
+Subject: File attached
+Date: Wed, 24 Sep 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary"
+
+--mixed-boundary
+Content-Type: text/plain; charset="utf-8"
+
+Please see the attached file.
+
+--mixed-boundary
+Content-Type: application/pdf; name="../../../evil.pdf"
+Content-Disposition: attachment; filename="../../../evil.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDM+PgpzdHJlYW0KRU9GCmVuZHN0
+cmVhbQplbmRvYmoK
+--mixed-boundary--

@@ -1,0 +1,14 @@
+From: "PayPal Security" <security@evil.com>
+To: "Bob" <bob@example.org>
+Subject: Urgent: Verify your account immediately
+Date: Wed, 24 Sep 2026 10:00:00 +0000
+Message-ID: <1234@evil.com>
+Authentication-Results: mx.example.com;
+    spf=softfail smtp.mailfrom=evil.com;
+    dkim=fail header.d=evil.com;
+    dmarc=fail header.from=evil.com
+Received-SPF: softfail (mx.example.com: domain of transitioning evil.com does not designate 1.2.3.4 as permitted sender) client-ip=1.2.3.4;
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Please log in: http://192.168.1.100/login

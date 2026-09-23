@@ -1,0 +1,34 @@
+From: "PayPal Security" <security@evil.com>
+To: "Bob" <bob@example.org>
+Subject: Urgent: Verify your account immediately
+Date: Wed, 24 Sep 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary"
+
+--mixed-boundary
+Content-Type: multipart/alternative; boundary="alt-boundary"
+
+--alt-boundary
+Content-Type: text/plain; charset="utf-8"
+
+Please log in: http://192.168.1.100/login
+Or use our short link: http://bit.ly/12345
+
+--alt-boundary
+Content-Type: text/html; charset="utf-8"
+
+<html>
+<body>
+    <p>Please log in: <a href="http://192.168.1.100/login">http://paypal.com/login</a></p>
+    <p>Or use our short link: <a href="http://bit.ly/12345">http://bit.ly/12345</a></p>
+</body>
+</html>
+--alt-boundary--
+
+--mixed-boundary
+Content-Type: application/vnd.ms-word.document.macroEnabled.12; name="invoice.pdf.docm"
+Content-Disposition: attachment; filename="invoice.pdf.docm"
+Content-Transfer-Encoding: base64
+
+SGVsbG8sIFdvcmxkIQ==
+--mixed-boundary--
