@@ -144,16 +144,22 @@ class TIOrchestrator:
 
             try:
                 res = self.provider.lookup(ioc_type, ioc_value)
-                self.cache.set(res)
-                results.append(res)
             except Exception:
-                results.append(TIResult(
+                res = TIResult(
                     ioc_type=ioc_type,
                     ioc_value=ioc_value,
                     provider_name=self.provider.name,
                     status=TIStatus.PROVIDER_ERROR,
                     timestamp=0.0
-                ))
+                )
+
+            # Cache is best-effort and must never change the provider result.
+            try:
+                self.cache.set(res)
+            except Exception:
+                pass
+
+            results.append(res)
 
         # We will sort the results to ensure deterministic ordering (helps with testing)
         return sorted(results, key=lambda r: (r.ioc_type.value, r.ioc_value))
